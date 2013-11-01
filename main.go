@@ -1,0 +1,42 @@
+package main
+
+import (
+	"github.com/garyburd/redigo/redis"
+	"github.com/hoisie/web"
+	"io/ioutil"
+)
+
+var r = RedisConnection()
+
+func main() {
+	web.Post("/(.*)", publisher)
+	web.Run("0.0.0.0:9999")
+}
+
+func publisher(ctx *web.Context, queue string) string {
+	ctx.SetHeader("Server", "go.postal", true)
+	body, err := ioutil.ReadAll(ctx.Request.Body)
+	check(err)
+	ctx.Request.Body.Close()
+	go publish(queue, string(body))
+	return "OK"
+
+}
+
+func publish(queue string, data string) {
+	_, err := r.Do("PUBLISH", queue, data)
+	check(err)
+}
+
+func RedisConnection() redis.Conn {
+	c, err := redis.Dial("tcp", ":6379")
+	check(err)
+	// defer c.Close()
+	return c
+}
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
