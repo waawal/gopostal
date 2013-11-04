@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/darkhelmet/env"
 	"github.com/garyburd/redigo/redis"
 	"github.com/hoisie/web"
 	"io/ioutil"
@@ -9,8 +10,9 @@ import (
 var r = RedisConnection()
 
 func main() {
+	host := env.StringDefault("GOPOSTAL_HOST", "0.0.0.0:9999")
 	web.Post("/(.*)", publisher)
-	web.Run("0.0.0.0:9999")
+	web.Run(host)
 }
 
 func publisher(ctx *web.Context, queue string) string {
