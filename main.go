@@ -19,21 +19,19 @@ func publisher(ctx *web.Context, queue string) string {
 	ctx.SetHeader("Server", "go.postal", true)
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	check(err)
-	ctx.Request.Body.Close()
-	go publish(queue, string(body))
+	defer ctx.Request.Body.Close()
+	go publish(&queue, &body)
 	return "OK"
-
 }
 
-func publish(queue string, data string) {
-	_, err := r.Do("PUBLISH", queue, data)
+func publish(queue *string, data *[]byte) {
+	_, err := r.Do("PUBLISH", *queue, *data)
 	check(err)
 }
 
 func RedisConnection() redis.Conn {
 	c, err := redis.Dial("tcp", ":6379")
 	check(err)
-	// defer c.Close()
 	return c
 }
 
